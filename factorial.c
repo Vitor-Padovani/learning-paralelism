@@ -3,7 +3,7 @@
 #include <pthread.h>
 
 #define NUM_THREADS 3
-#define FACT 11
+#define FACT 10
 
 long* fact_vector;
 
@@ -14,9 +14,16 @@ typedef struct {
     int section_end;
 } Thread_data;
 
+void print_vector(long* vector, int size) {
+    for (int i = 0; i < size; i++)
+        printf("%d,", vector[i]);
+    printf("\n");
+}
+
 void* job(void* arg) {
     Thread_data* thread = (Thread_data*) arg;
-    printf("Initializing T%d\t[%lld]...\n", thread->num, pthread_self());
+    // printf("Initializing T%d\t[%lld]...\n", thread->num, pthread_self());
+    // printf("-> %d, %d\n", thread->section_start, thread->section_end);
 
     for (int i = thread->section_start+1; i < thread->section_end; i++) {
         fact_vector[thread->section_start] *= fact_vector[i];
@@ -25,8 +32,13 @@ void* job(void* arg) {
     if (thread->num == 0) {
         int remaining = FACT % NUM_THREADS;
 
+        for (int i = 0; i < 99999999; i++);
+
         for (int i = FACT - remaining; i < FACT; i++)
             fact_vector[0] *= fact_vector[i];
+
+        for (int i = 1; i < NUM_THREADS; i++)
+            fact_vector[0] *= fact_vector[i*thread->section_end];
     }
 
     return NULL;
@@ -51,9 +63,7 @@ int main() {
         pthread_join(threads[i].id, NULL);
     }
 
-    for (int i = 0; i < FACT; i++)
-        printf("%ld,", fact_vector[i]);
-    printf("\n");
+    printf("Factorial: %ld\n", fact_vector[0]);
 
     return 0;
 }
